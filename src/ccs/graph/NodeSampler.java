@@ -22,5 +22,5 @@ import java.util.AbstractList;
 public interface NodeSampler<E> {
 	// public int getSamplePointDimension();
 
-	public AbstractList<SamplePoint<E>> sample(Node n);
+	public AbstractList<SamplePoint<E>> sample(OrientedInterval n);
 }

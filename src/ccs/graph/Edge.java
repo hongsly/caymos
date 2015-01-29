@@ -17,6 +17,7 @@
 
 package ccs.graph;
 
+
 public class Edge extends Pair<Vertex> {
 
 	Edge(Vertex o1, Vertex o2) {

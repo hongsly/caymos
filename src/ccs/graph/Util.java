@@ -18,109 +18,245 @@
 package ccs.graph;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
 
-import ccs.Debug;
+import ui.Debug;
 
 public class Util {
 
 	static int border = 20;
 
-	private static Point2D randomPoint() {
-		int x = (int) (Math.random() * (800 - 2 * border)) + border;
-		int y = (int) (Math.random() * (600 - 2 * border)) + border;
-		return new Point2D(x, y);
-	}
+	// private static Point2D randomPoint() {
+	// int x = (int) (Math.random() * (800 - 2 * border)) + border;
+	// int y = (int) (Math.random() * (600 - 2 * border)) + border;
+	// return new Point2D(x, y);
+	// }
+	//
+	// // Not used
+	// public static Realization generateGraph(int n) {
+	// Realization g = new Realization(null);
+	// for (int i = 0; i < n; ++i) {
+	// g.addVertex(randomPoint());
+	// }
+	//
+	// for (int i = 0; i < g.getSize(); ++i) {
+	// Vertex v = g.getVertex(i);
+	// int m = (int) (Math.random() * n);
+	// for (int j = 0; j < m; ++j) {
+	// Vertex u;
+	// do {
+	// u = g.getRandomVertex();
+	// } while (v == u);
+	// if (!g.isAdjacent(v, u)) {
+	// Debug.msg("add edge: (" + v + ", " + u + ")");
+	// g.addEdge(v, u);
+	// }
+	// }
+	// }
+	// return g;
+	// }
 
-	public static Graph generateListGraph(int n) {
-		Graph g = new Graph();
-		for (int i = 0; i < n; ++i) {
-			g.addVertex(randomPoint());
-		}
+	// // Not used
+	// public static Realization generateHennebergGraph(int n,
+	// boolean isTriangleFree) {
+	// // base non-edge:
+	// Realization g = new Realization(null);
+	// for (int i = 0; i < Math.min(2, n); ++i)
+	// g.addVertex(randomPoint());
+	// if (n <= 2)
+	// return g;
+	//
+	// for (int i = 0; i < n - 2; ++i) {
+	// Vertex v1, v2;
+	// boolean looping = true;
+	// do {
+	// v1 = g.getRandomVertex();
+	// v2 = g.getRandomVertex();
+	//
+	// looping = (v1 == v2);
+	// if (isTriangleFree)
+	// looping = (looping || g.isAdjacent(v1, v2));
+	// } while (looping);
+	//
+	// Vertex v = g.addVertex(randomPoint());
+	//
+	// g.addEdge(v1, v);
+	// g.addEdge(v, v2);
+	//
+	// Debug.msg(v + " on (" + v1 + "," + v2 + ")");
+	// }
+	// return g;
+	// }
+	// */
 
-		for (int i = 0; i < g.getSize(); ++i) {
-			Vertex v = g.getVertex(i);
-			int m = (int) (Math.random() * n);
-			for (int j = 0; j < m; ++j) {
-				Vertex u;
-				do {
-					u = g.getRandomVertex();
-				} while (v == u);
-				if (!g.isAdjacent(v, u)) {
-					if (Graph.DEBUG)
-						System.out.println("add edge: (" + v + ", " + u + ")");
-					g.addEdge(v, u);
-				}
-			}
-		}
-		return g;
-	}
+	/**
+	 * Obtain a bipartite cluster graph from g, where one side corresponds to
+	 * vertices and the other side corresponds to clusters
+	 */
+	public static ClusterGraph getDecompose(final LinkageGraph g) {
+		// generate a list of clusters using Fudo's method
 
-	// Generate an arbitrary 1-dof Henneberg-I graph
-	public static Graph generateHennebergGraph(int n, boolean isTriangleFree) {
-		// base non-edge:
-		Graph g = new Graph();
-		for (int i = 0; i < Math.min(2, n); ++i)
-			g.addVertex(randomPoint());
-		if (n <= 2)
-			return g;
+		int n = g.size();
 
-		for (int i = 0; i < n - 2; ++i) {
-			Vertex v1, v2;
-			boolean looping = true;
-			do {
-				v1 = g.getRandomVertex();
-				v2 = g.getRandomVertex();
+		// (1) Construct initial clusters of size 2
+		// (2) Construct the cluster graph H, bipartite
+		// with
+		HashMap<Edge, ClusterGraphNode> edgeMap = new HashMap<Edge, ClusterGraphNode>();
+		ClusterGraph h = new ClusterGraph();
+		for (Vertex v : g.getVertices())
+			h.addVertex(v);
 
-				looping = (v1 == v2);
-				if (isTriangleFree)
-					looping = (looping || g.isAdjacent(v1, v2));
-			} while (looping);
-
-			Vertex v = g.addVertex(randomPoint());
-
-			g.addEdge(v1, v);
-			g.addEdge(v, v2);
-
-			if (Graph.DEBUG)
-				System.out.println(v + " on (" + v1 + "," + v2 + ")");
-		}
-		return g;
-	}
-
-	// does not modify g
-	public static LinkedList<Cluster> getDecompose(Graph g) {
-		// generate a list of clusters
-
-		// TODO: use Fudo's method
-		// first attempt: brute-force: merge to get all clusters
-		LinkedList<Cluster> clusters = new LinkedList<Cluster>();
-
-		// Initialize: for each edge: add a cluster
-		// !!! for each isolated vertex: add a cluster
-		int n = g.getSize();
-		for (int i = 0; i < n; ++i)
-			for (int j = 0; j < i; ++j) {
-				Vertex v1 = g.getVertex(i), v2 = g.getVertex(j);
-				if (g.isAdjacent(v1, v2)) {
+		for (Vertex v : g.getVertices()) {
+			for (Vertex u : g.getNeighbors(v)) {
+				if (v.index < u.index) {
 					Cluster c = new Cluster(g);
-					c.addVertex(v1, g.getPoint(v1));
-					c.addVertex(v2, g.getPoint(v2));
-					clusters.add(c);
+					c.addVertices(v, u);
+					// if (g.degree(v) > 1) c.addSharedVertices(v);
+					// if (g.degree(u) > 1) c.addSharedVertices(u);
+					ClusterGraphNode node = h.addVertex(c);
+					h.addEdges(c, v, u);
+					edgeMap.put(new Edge(v, u), node);
 				}
 			}
+		}
+
+		// (3) Find all triangles in G using the Forward algorithm
+		ArrayList<ClusterGraphNode[]> triangles = findTriangles(g, n, edgeMap);
+
+		// (4) Successively rewrite H by replacing a 6-cycle in H by a 4-node
+		// structure. Record a cluster merging operation for each such rewriting
+		// step.
+
+		ArrayList<ClusterGraphNode> newNodes = new ArrayList<ClusterGraphNode>();
+
+		outer: for (ClusterGraphNode[] t : triangles) {
+			for (ClusterGraphNode e : t)
+				if (!h.contains(e))
+					continue outer;
+			ClusterGraphNode x = h.mergeClusters(t[0], t[1], t[2]);
+			newNodes.add(x);
+		}
+
+		for (ClusterGraphNode x : newNodes) {
+			// find a new 6-cycle in H using depth-3 BFS
+			while (x != null && h.contains(x))
+				x = merge6Cycle(h, x);
+		}
+
+		return h;
+
+		// //
+		// ====================================================================
+		//
+		// // first attempt: brute-force: merge to get all clusters
+		// LinkedList<Cluster> clusters = new LinkedList<Cluster>();
+		//
+		// // Initialize: for each edge: add a cluster
+		// // !!! for each isolated vertex: add a cluster
+		// int n = g.size();
+		// for (int i = 0; i < n; ++i)
+		// for (int j = 0; j < i; ++j) {
+		// Vertex v1 = g.getVertex(i), v2 = g.getVertex(j);
+		// if (g.isAdjacent(v1, v2)) {
+		// Cluster c = new Cluster(g);
+		// c.addVertices(v1);
+		// c.addVertices(v2);
+		// clusters.add(c);
+		// }
+		// }
+		// for (int i = 0; i < n; ++i) {
+		// Vertex v = g.getVertex(i);
+		// if (g.getNeighbors(v).isEmpty()) {
+		// Cluster c = new Cluster(g);
+		// c.addVertices(v);
+		// clusters.add(c);
+		// }
+		// }
+		// // Merge step
+		// Cluster.merge(clusters);
+		// return clusters;
+	}
+
+	private static ArrayList<ClusterGraphNode[]> findTriangles(
+			final LinkageGraph g, int n, HashMap<Edge, ClusterGraphNode> edgeMap) {
+		ArrayList<ClusterGraphNode[]> triangles = new ArrayList<ClusterGraphNode[]>();
+		ArrayList<Vertex> vertices = new ArrayList<Vertex>(n);
+		vertices.addAll(g.getVertices());
+		Collections.sort(vertices, new Comparator<Vertex>() {
+			// sort in decreasing degree order
+			public int compare(Vertex v1, Vertex v2) {
+				return g.degree(v2) - g.degree(v1);
+			}
+		});
+		HashMap<Vertex, Integer> order = new HashMap<Vertex, Integer>();
+		HashMap<Vertex, HashSet<Vertex>> admissableNeighbors = new HashMap<Vertex, HashSet<Vertex>>();
 		for (int i = 0; i < n; ++i) {
-			Vertex v = g.getVertex(i);
-			if (g.getNeighbors(v).isEmpty()) {
-				Cluster c = new Cluster(g);
-				c.addVertex(v, g.getPoint(v));
-				clusters.add(c);
+			order.put(vertices.get(i), i);
+			admissableNeighbors.put(vertices.get(i), new HashSet<Vertex>());
+		}
+		for (Vertex v : vertices) {
+			for (Vertex u : g.getNeighbors(v)) {
+				if (order.get(u) > order.get(v)) {
+					HashSet<Vertex> s = new HashSet<Vertex>(
+							admissableNeighbors.get(v));
+					s.retainAll(admissableNeighbors.get(u));
+					for (Vertex w : s) {
+						ClusterGraphNode[] triangle = {
+								edgeMap.get(new Edge(v, u)),
+								edgeMap.get(new Edge(v, w)),
+								edgeMap.get(new Edge(u, w)) };
+						triangles.add(triangle);
+					}
+					admissableNeighbors.get(u).add(v);
+				}
 			}
 		}
-		// Merge step
-		Cluster.merge(clusters);
-		return clusters;
+		return triangles;
+	}
+
+	/**
+	 * Start a depth-3 BFS search in h at x. Find a 6-cycle and merge the 3
+	 * corresponding clusters.
+	 * 
+	 * @return the new cluster generated. null if no 6-cycle is found
+	 */
+	private static ClusterGraphNode merge6Cycle(ClusterGraph h,
+			ClusterGraphNode x) {
+		int depth = 3;
+		LinkedList<TwoTuple<ClusterGraphNode, Integer>> queue = new LinkedList<TwoTuple<ClusterGraphNode, Integer>>();
+		HashSet<ClusterGraphNode> visited = new HashSet<ClusterGraphNode>();
+		HashMap<ClusterGraphNode, ClusterGraphNode> encountered = new HashMap<ClusterGraphNode, ClusterGraphNode>();
+		queue.addLast(new TwoTuple<ClusterGraphNode, Integer>(x, 0));
+		while (!queue.isEmpty()) {
+			TwoTuple<ClusterGraphNode, Integer> tuple = queue.removeFirst();
+			if (tuple.o2 < depth) {
+				for (ClusterGraphNode u : h.getNeighbors(tuple.o1)) {
+					if (visited.contains(u))
+						continue;
+					if (tuple.o2 + 1 == depth && encountered.containsKey(u)) {
+						assert (u.isVertex);
+
+						ClusterGraphNode v1 = u, c1 = tuple.o1, v2 = encountered
+								.get(c1), c2 = x, c3 = encountered.get(u), v3 = encountered
+								.get(c3);
+						return h.mergeClusters(c1, c2, c3);
+					} else {
+						queue.addLast(new TwoTuple<ClusterGraphNode, Integer>(
+								u, tuple.o2 + 1));
+						encountered.put(u, tuple.o1);
+					}
+				}
+			}
+			visited.add(tuple.o1);
+		}
+		return null;
 	}
 
 	// public static double twoDigits(double val) {

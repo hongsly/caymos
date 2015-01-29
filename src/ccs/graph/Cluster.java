@@ -25,16 +25,26 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+/**
+ * Combinatorics of a cluster
+ */
 public class Cluster {
-	private Graph graph;
+	// private Realization graph;
 
-	private HashSet<Vertex> vertices;
-	private HashSet<Vertex> sharedVertices;
+	/**
+	 * The whole graph, of which this cluster is a subgraph
+	 */
+	private LinkageGraph graph;
 
-	// TODO: always store the inital points
+	 HashSet<Vertex> vertices;
+	 
+	 // TODO sharedVertices ... should not be put in this class
+	 HashSet<Vertex> sharedVertices;
+
+	// TODO: always store the inital points ... HERE ??
 	// private HashMap<Vertex, Point2D> initPoints;
 
-	public Cluster(Graph g) {
+	public Cluster(LinkageGraph g) {
 		graph = g;
 
 		vertices = new HashSet<Vertex>();
@@ -42,8 +52,9 @@ public class Cluster {
 		// initPoints = new HashMap<Vertex, Point2D>();
 	}
 
-	public void addVertex(Vertex v, Point2D p) {
-		vertices.add(v);
+	public void addVertices(Vertex... vertices) {
+		for (Vertex v : vertices)
+			this.vertices.add(v);
 		// initPoints.put(v, p);
 	}
 
@@ -110,15 +121,13 @@ public class Cluster {
 		return true;
 	}
 
-	public static Cluster merge(Cluster c1, Cluster c2, Cluster c3) {
-		assert (c1.graph == c2.graph && c1.graph == c3.graph);
-		Cluster c = new Cluster(c1.graph);
-		c.vertices.addAll(c1.vertices);
-		c.vertices.addAll(c2.vertices);
-		c.vertices.addAll(c3.vertices);
-		// c.initPoints.putAll(c1.initPoints);
-		// c.initPoints.putAll(c2.initPoints);
-		// c.initPoints.putAll(c3.initPoints);
+	public static Cluster merge(Cluster... clusters) {
+		assert (clusters.length == 3);
+		assert (clusters[0].graph == clusters[1].graph && clusters[1].graph == clusters[2].graph);
+		Cluster c = new Cluster(clusters[0].graph);
+		for (Cluster cluster : clusters) {
+			c.vertices.addAll(cluster.vertices);
+		}
 		return c;
 	}
 
@@ -149,9 +158,11 @@ public class Cluster {
 		}
 	}
 
-	public void addSharedVertex(Vertex v) {
-		assert (vertices.contains(v));
-		this.sharedVertices.add(v);
+	public void addSharedVertices(Vertex... vs) {
+		for (Vertex v : vs) {
+			assert (vertices.contains(v));
+			this.sharedVertices.add(v);
+		}
 	}
 
 	public boolean containsSharedVertex(Vertex v) {
@@ -190,39 +201,39 @@ public class Cluster {
 	// return initPoints.get(e.v1()).distance(initPoints.get(e.v2()));
 	// }
 
-	public HashMap<Vertex, Point2D> getTransform(Edge e, EdgePos newPos) {
+	public HashMap<Vertex, Point2D> getTransform(Edge e, EdgePos newPos,
+			Realization init) {
 		// generate a transformation from oldpos -> newpos
-		// TODO: incorrect?
 
 		// TODO: first try to move one point together?
 		// EdgePos oldPos = new EdgePos(initPoints.get(e.v1()), initPoints.get(e
 		// .v2()));
-		EdgePos oldPos = new EdgePos(graph.getInitPoint(e.v1()),
-				graph.getInitPoint(e.v2()));
+		EdgePos oldPos = new EdgePos(init.getPoint(e.v1()), init.getPoint(e
+				.v2()));
 
 		// System.out.println(initPoints);
 		// System.out.println(oldPos);
-		assert (Math.abs(oldPos.length() - newPos.length()) < TreeDecomp.ACCURACY * 10);
-		//System.out.println("transform cluster:" + this);
-		//System.out.println("old pos/new pos: " + oldPos + "/" + newPos);
+		assert (Math.abs(oldPos.length() - newPos.length()) < TDLinkage.ACCURACY * 10);
+		// System.out.println("transform cluster:" + this);
+		// System.out.println("old pos/new pos: " + oldPos + "/" + newPos);
 
 		AffineTransform r = new AffineTransform();
 		double theta = newPos.angle(oldPos);
 		r.rotate(-theta, oldPos.x1(), oldPos.y1());
-		//System.out.println("ccw angle: " + theta / Math.PI + "PI");
+		// System.out.println("ccw angle: " + theta / Math.PI + "PI");
 
 		AffineTransform t = new AffineTransform();
 		t.translate(newPos.x1() - oldPos.x1(), newPos.y1() - oldPos.y1());
-		//System.out.println("translate (" + (newPos.x1() - oldPos.x1()) + ","
-		//		+ (newPos.y1() - oldPos.y1()) + ")");
+		// System.out.println("translate (" + (newPos.x1() - oldPos.x1()) + ","
+		// + (newPos.y1() - oldPos.y1()) + ")");
 
 		t.concatenate(r);
 
 		HashMap<Vertex, Point2D> points = new HashMap<Vertex, Point2D>();
 		for (Vertex v : getVertices()) {
 			// System.out.print(v + "'s old pos:" + getPoint(v) + "; ");
-			//Point2D p = initPoints.get(v).transform(t);// transformVertex
-			Point2D p = graph.getInitPoint(v).transform(t);
+			// Point2D p = initPoints.get(v).transform(t);// transformVertex
+			Point2D p = init.getPoint(v).transform(t);
 			// System.out.println(" new pos:" + getPoint(v));
 			points.put(v, p);
 		}

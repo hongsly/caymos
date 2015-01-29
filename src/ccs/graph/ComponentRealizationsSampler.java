@@ -20,11 +20,11 @@ package ccs.graph;
 import java.util.AbstractList;
 import java.util.ArrayList;
 
-public class ComponentRealizationsSampler implements NodeSampler<Graph> {
+public class ComponentRealizationsSampler implements NodeSampler<Realization> {
 	private int samplesPerNode;
-	private TreeDecomp t;
+	private TDLinkage t;
 
-	public ComponentRealizationsSampler(TreeDecomp t, int spn) {
+	public ComponentRealizationsSampler(TDLinkage t, int spn) {
 		assert (spn > 0);
 		this.t = t;
 		samplesPerNode = spn;
@@ -32,8 +32,8 @@ public class ComponentRealizationsSampler implements NodeSampler<Graph> {
 	
 	final double ACCURACY = 2;
 
-	public AbstractList<SamplePoint<Graph>> sample(Node n) {
-		ArrayList<SamplePoint<Graph>> list = new ArrayList<SamplePoint<Graph>>();
+	public AbstractList<SamplePoint<Realization>> sample(OrientedInterval n) {
+		ArrayList<SamplePoint<Realization>> list = new ArrayList<SamplePoint<Realization>>();
 		
 		int spn = Math.max(samplesPerNode, (int)(n.getLength()/ACCURACY));
 
@@ -41,7 +41,7 @@ public class ComponentRealizationsSampler implements NodeSampler<Graph> {
 			double percentage = (double) i / spn;
 			double cayley = n.sampleCayleyAt(percentage);
 
-			Graph g = t.tryRealize(cayley, n.getSolutionType());
+			Realization g = t.tryRealize(cayley,n.getSolutionType());
 			assert (g != null);
 			/*// ad-hoc modification
 			double pp = percentage;
@@ -50,7 +50,7 @@ public class ComponentRealizationsSampler implements NodeSampler<Graph> {
 				cayley = n.sampleCayleyAt(pp);
 				g = t.tryRealize(cayley,n.getSolutionType());
 			}*/
-			list.add(new SamplePoint<Graph>(g));
+			list.add(new SamplePoint<Realization>(g));
 			
 		}
 

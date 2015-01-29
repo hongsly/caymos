@@ -24,35 +24,35 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import ccs.Debug;
+import ui.Debug;
 
 /**
  * Interface for MotionPath and ConnectedComponent
  */
-public abstract class ContinuousMotion implements List<Node> {
-	protected TreeDecomp t;
+public abstract class ContinuousMotion implements List<OrientedInterval> {
+	protected TDLinkage tdLinkage;
 
-	protected ArrayList<Node> nodes;
+	protected ArrayList<OrientedInterval> orientedIntervals;
 
-	public ContinuousMotion(TreeDecomp t) {
-		this.t = t;
-		nodes = new ArrayList<Node>();
+	public ContinuousMotion(TDLinkage t) {
+		this.tdLinkage = t;
+		orientedIntervals = new ArrayList<OrientedInterval>();
 	}
 
-	public abstract Node startNode();
+	public abstract OrientedInterval startNode();
 
-	public abstract Node endNode();
+	public abstract OrientedInterval endNode();
 
-	public AbstractList<SolutionType> getSolutionTypes() {
-		ArrayList<SolutionType> l = new ArrayList<SolutionType>();
-		for (Node n : this) {
+	public AbstractList<RealizationType> getSolutionTypes() {
+		ArrayList<RealizationType> l = new ArrayList<RealizationType>();
+		for (OrientedInterval n : this) {
 			l.add(n.getSolutionType());
 		}
 		return l;
 	}
 
 	public String toString() {
-		return nodes.toString();
+		return orientedIntervals.toString();
 	}
 
 	/*
@@ -60,44 +60,44 @@ public abstract class ContinuousMotion implements List<Node> {
 	 */
 
 	public int size() {
-		return nodes.size();
+		return orientedIntervals.size();
 	}
 
-	public Node set(int index, Node n) {
-		return nodes.set(index, n);
+	public OrientedInterval set(int index, OrientedInterval n) {
+		return orientedIntervals.set(index, n);
 	}
 
-	public boolean add(Node n) {
+	public boolean add(OrientedInterval n) {
 		// Debug.msg("adding node " + n);
-		return nodes.add(n);
+		return orientedIntervals.add(n);
 	}
 
-	public Node get(int index) {
-		return nodes.get(index);
+	public OrientedInterval get(int index) {
+		return orientedIntervals.get(index);
 	}
 
 	public void clear() {
-		nodes.clear();
+		orientedIntervals.clear();
 	}
 
 	public boolean contains(Object arg0) {
-		return nodes.contains(arg0);
+		return orientedIntervals.contains(arg0);
 	}
 
 	public boolean containsAll(Collection<?> arg0) {
-		return nodes.containsAll(arg0);
+		return orientedIntervals.containsAll(arg0);
 	}
 
 	public int indexOf(Object arg0) {
-		return nodes.indexOf(arg0);
+		return orientedIntervals.indexOf(arg0);
 	}
 
 	public boolean isEmpty() {
-		return nodes.isEmpty();
+		return orientedIntervals.isEmpty();
 	}
 
-	public Iterator<Node> iterator() {
-		return nodes.iterator();
+	public Iterator<OrientedInterval> iterator() {
+		return orientedIntervals.iterator();
 	}
 
 	/**
@@ -109,12 +109,12 @@ public abstract class ContinuousMotion implements List<Node> {
 		throw new UnsupportedOperationException();
 	}
 
-	public ListIterator<Node> listIterator() {
-		return nodes.listIterator();
+	public ListIterator<OrientedInterval> listIterator() {
+		return orientedIntervals.listIterator();
 	}
 
-	public ListIterator<Node> listIterator(int arg0) {
-		return nodes.listIterator(arg0);
+	public ListIterator<OrientedInterval> listIterator(int arg0) {
+		return orientedIntervals.listIterator(arg0);
 	}
 
 	/**
@@ -124,30 +124,30 @@ public abstract class ContinuousMotion implements List<Node> {
 	 *            not included
 	 * @see java.util.List#subList(int, int)
 	 */
-	public List<Node> subList(int fromIndex, int toIndex) {
-		return nodes.subList(fromIndex, toIndex);
+	public List<OrientedInterval> subList(int fromIndex, int toIndex) {
+		return orientedIntervals.subList(fromIndex, toIndex);
 	}
 
 	public Object[] toArray() {
-		return nodes.toArray();
+		return orientedIntervals.toArray();
 	}
 
 	public <T> T[] toArray(T[] arg0) {
-		return nodes.toArray(arg0);
+		return orientedIntervals.toArray(arg0);
 	}
 
-	public void add(int arg0, Node arg1) {
+	public void add(int arg0, OrientedInterval arg1) {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean addAll(Collection<? extends Node> arg0) {
-		for (Node n : arg0)
+	public boolean addAll(Collection<? extends OrientedInterval> arg0) {
+		for (OrientedInterval n : arg0)
 			if (!add(n))
 				return false;
 		return true;
 	}
 
-	public boolean addAll(int arg0, Collection<? extends Node> arg1) {
+	public boolean addAll(int arg0, Collection<? extends OrientedInterval> arg1) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -155,7 +155,7 @@ public abstract class ContinuousMotion implements List<Node> {
 		throw new UnsupportedOperationException();
 	}
 
-	public Node remove(int arg0) {
+	public OrientedInterval remove(int arg0) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -176,10 +176,10 @@ public abstract class ContinuousMotion implements List<Node> {
 	 *            a sampler defining sampling method for each node
 	 * @return a sequence of sample points obtained from each node
 	 */
-	public <E> ContinuousMotionSamples<E> sample(NodeSampler<E> s) {
+	public <E> ContinuousMotionSamples<E> getRealizations(NodeSampler<E> s) {
 		ContinuousMotionSamples<E> samples = new ContinuousMotionSamples<E>(
 				this);
-		for (Node n : this) {
+		for (OrientedInterval n : this) {
 			samples.addAll(s.sample(n));
 		}
 		return samples;
@@ -192,7 +192,7 @@ public abstract class ContinuousMotion implements List<Node> {
 		ContinuousMotion that = (ContinuousMotion) obj;
 		if (size() != that.size())
 			return false;
-		ListIterator<Node> iterThis = this.listIterator(), iterThat = that
+		ListIterator<OrientedInterval> iterThis = this.listIterator(), iterThat = that
 				.listIterator();
 		while (iterThis.hasNext()) {
 			if (!iterThis.next().equals(iterThat.next()))
@@ -207,7 +207,7 @@ public abstract class ContinuousMotion implements List<Node> {
  * Contains one consecutive interval on a continuous motion.
  * 
  */
-class Node {
+class OrientedInterval {
 	/**
 	 * Start Cayley configuration
 	 */
@@ -220,13 +220,13 @@ class Node {
 
 	private Interval interval;
 
-	private SolutionType type;
+	private RealizationType realizationType;
 
-	public Node(double start, double end, Interval interval, SolutionType type) {
+	public OrientedInterval(double start, double end, Interval interval, RealizationType type) {
 		this.start = start;
 		this.end = end;
 		this.interval = interval;
-		this.type = type.clone();
+		this.realizationType = type.clone();
 	}
 
 	public double getStart() {
@@ -241,15 +241,15 @@ class Node {
 		return interval;
 	}
 
-	public SolutionType getSolutionType() {
-		return type;
+	public RealizationType getSolutionType() {
+		return realizationType;
 	}
 
 	public double getLength() {
 		return Math.abs(getStart() - getEnd());
 	}
 
-	public boolean contains(double lf, SolutionType type) {
+	public boolean contains(double lf, RealizationType type) {
 		if (!type.equals(getSolutionType()))
 			return false;
 		return Util.between(lf, getStart(), getEnd());
@@ -270,11 +270,11 @@ class Node {
 	@Override
 	public boolean equals(Object obj) {
 		// TODO Auto-generated method stub
-		if (!(obj instanceof Node))
+		if (!(obj instanceof OrientedInterval))
 			return false;
-		Node that = (Node) obj;
+		OrientedInterval that = (OrientedInterval) obj;
 		return start == that.start && end == that.end
-				&& interval.equals(that.interval) && type.equals(that.type);
+				&& interval.equals(that.interval) && realizationType.equals(that.realizationType);
 	}
 
 }

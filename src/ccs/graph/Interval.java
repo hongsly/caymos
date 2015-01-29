@@ -90,9 +90,9 @@ public class Interval implements Comparable<Interval> {
 
 	public boolean contains(double v) {
 		// added accuracy
-		if (Math.abs(lower - v) < TreeDecomp.ACCURACY)
+		if (Math.abs(lower - v) < TDLinkage.ACCURACY)
 			return true;
-		if (Math.abs(upper - v) < TreeDecomp.ACCURACY)
+		if (Math.abs(upper - v) < TDLinkage.ACCURACY)
 			return true;
 		return v >= lower && v <= upper;
 	}

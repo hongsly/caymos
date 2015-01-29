@@ -20,7 +20,7 @@ package ccs.graph;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import ccs.Debug;
+import ui.Debug;
 
 public class ConstructionStep {
 	Vertex stepVertex;
@@ -66,63 +66,71 @@ public class ConstructionStep {
 				+ c2() + ")";
 	}
 
-	public static ArrayList<ConstructionStep> generateConstructionSequence(
-			TreeDecomp t) {
-		ArrayList<ConstructionStep> constructionSequence = new ArrayList<ConstructionStep>();
-
-		ArrayList<Vertex> constructedV = new ArrayList<Vertex>(), remainingV = new ArrayList<Vertex>();
-		remainingV.addAll(t.getSharedVertices());
-		HashSet<Cluster> constructedC = new HashSet<Cluster>(), remainingC = new HashSet<Cluster>();
-		remainingC.addAll(t.getClusters());
-
-		remainingV.remove(t.getBaseNonedge().v1());
-		remainingV.remove(t.getBaseNonedge().v2());
-		constructedV.add(t.getBaseNonedge().v1());
-		constructedV.add(t.getBaseNonedge().v2());
-
-		// TODO: First attempt: Brute Force
-		while (remainingV.size() > 0) {
-			for (int i = 0; i < constructedV.size(); ++i)
-				for (int j = 0; j < i; ++j) {
-					Vertex v1 = constructedV.get(i);
-					Vertex v2 = constructedV.get(j);
-					for (Cluster c1 : t.getClusters(v1))
-						for (Cluster c2 : t.getClusters(v2)) {
-							if (c1 == c2 || constructedC.contains(c1)
-									|| constructedC.contains(c2))
-								continue;
-
-							Vertex v = Cluster.sharedVertex(c1, c2);
-							if (v == null)
-								continue;
-							assert (remainingV.contains(v));
-
-							ConstructionStep step;
-							if (v1.index < v2.index)
-								step = new ConstructionStep(v, c1, c2, v1, v2);
-							else
-								step = new ConstructionStep(v, c2, c1, v2, v1);
-							constructionSequence.add(step);
-							Edge e1 = new Edge(v1, v), e2 = new Edge(v2, v);
-
-							constructedV.add(v);
-							remainingV.remove(v);
-							HashSet<Vertex> clusterVSet = c1
-									.unionSharedVertices(c2);
-							for (Vertex sv : clusterVSet) {
-								if (!constructedV.contains(sv)) {
-									constructedV.add(sv);
-									remainingV.remove(sv);
-								}
-							}
-							constructedC.add(c1);
-							constructedC.add(c2);
-							// if (DEBUG)
-							// System.out.print(v + " constructed \t");
-						}
-				}
-		}
-		return constructionSequence;
-	}
+	// public static ArrayList<ConstructionStep> generateConstructionSequence(
+	// TDLinkage t) {
+	// ArrayList<ConstructionStep> constructionSequence = new
+	// ArrayList<ConstructionStep>();
+	//
+	// ArrayList<Vertex> constructedV = new ArrayList<Vertex>(), remainingV =
+	// new ArrayList<Vertex>();
+	// remainingV.addAll(t.getSharedVertices());
+	// HashSet<Cluster> constructedC = new HashSet<Cluster>(), remainingC = new
+	// HashSet<Cluster>();
+	// remainingC.addAll(t.getClusters());
+	//
+	// remainingV.remove(t.getBaseNonedge().v1());
+	// remainingV.remove(t.getBaseNonedge().v2());
+	// constructedV.add(t.getBaseNonedge().v1());
+	// constructedV.add(t.getBaseNonedge().v2());
+	//
+	// First attempt: Brute Force
+	// while (remainingV.size() > 0) {
+	// //Debug.msg("remainV "+remainingV +"; constructedV "+ constructedV);
+	// //Debug.msg(t.clusterGraph);
+	// for (int i = 0; i < constructedV.size(); ++i)
+	// for (int j = 0; j < i; ++j) {
+	// Vertex v1 = constructedV.get(i);
+	// Vertex v2 = constructedV.get(j);
+	// //Debug.msg(t.getClusters(v1));
+	// //Debug.msg(t.getClusters(v2));
+	// for (Cluster c1 : t.getClusters(v1))
+	// for (Cluster c2 : t.getClusters(v2)) {
+	// if (c1 == c2 || constructedC.contains(c1)
+	// || constructedC.contains(c2))
+	// continue;
+	//
+	// Vertex v = Cluster.sharedVertex(c1, c2);
+	// //Debug.msg("trying triple: "+v1+","+v2+","+v);
+	// if (v == null)
+	// continue;
+	// assert (remainingV.contains(v));
+	//
+	// ConstructionStep step;
+	// if (v1.index < v2.index)
+	// step = new ConstructionStep(v, c1, c2, v1, v2);
+	// else
+	// step = new ConstructionStep(v, c2, c1, v2, v1);
+	// constructionSequence.add(step);
+	// Edge e1 = new Edge(v1, v), e2 = new Edge(v2, v);
+	//
+	// constructedV.add(v);
+	// remainingV.remove(v);
+	// HashSet<Vertex> clusterVSet = c1
+	// .unionSharedVertices(c2);
+	// for (Vertex sv : clusterVSet) {
+	// if (!constructedV.contains(sv)) {
+	// constructedV.add(sv);
+	// remainingV.remove(sv);
+	// }
+	// }
+	// constructedC.add(c1);
+	// constructedC.add(c2);
+	// // if (DEBUG)
+	// // System.out.print(v + " constructed \t");
+	// }
+	// }
+	// }
+	// return constructionSequence;
+	// }
 
 }

@@ -17,26 +17,50 @@
 
 package ccs.graph;
 
-
+/**
+ * Represents an immutable 2D vector (x,y) in double precision.
+ * @author Menghan
+ */
 public class Vector2D {
 	Point2D p;
 
+	/**
+	 * @param y
+	 */
 	public Vector2D(double x, double y) {
 		p = new Point2D(x, y);
 	}
 
+	/**
+	 * Constructs a 2D vector from <code>start</code> to <code>end</code>, i.e.
+	 * <code>end - start</code>
+	 * @param start
+	 * @param end
+	 */
 	public Vector2D(Point2D start, Point2D end) {
 		this(end.x() - start.x(), end.y() - start.y());
 	}
 
+	/**
+	 * The x coordinate of the vector
+	 * @return the x coordinate of the vector
+	 */
 	public double x() {
 		return p.x();
 	}
 
+	/**
+	 * The y coordinate of the vector
+	 * @return the y coordinate of the vector
+	 */
 	public double y() {
 		return p.y();
 	}
 
+	/**
+	 * Returns the norm of the vector, that is the l2 distance between its two endpoints
+	 * @return the norm of the vector
+	 */
 	public double norm() {
 		return p.distance(0, 0);
 	}
@@ -53,16 +77,18 @@ public class Vector2D {
 		return new Vector2D(this.x() - that.x(), this.y() - that.y());
 	}
 
-	// return ccw angle from this to that
 	// ~ this. angle - that.angle, ccw
+	/**
+	 * Returns the counterclockwise angle from this vector to another vector
+	 * @param that
+	 * @return the counterclockwise angle from <code>this</code> to <code>that</code>
+	 */
 	public double angle(Vector2D that) {
 		double cos = innerProduct(that) / (norm() * that.norm());
 
 		// Handle Inaccuracy
-		if (cos > 1 && cos - 1 < TreeDecomp.ACCURACY)
-			cos = 1;
-		if (cos < -1 && (-1 - cos) < TreeDecomp.ACCURACY)
-			cos = -1;
+		if (cos > 1 && cos - 1 < TDLinkage.ACCURACY) cos = 1;
+		if (cos < -1 && (-1 - cos) < TDLinkage.ACCURACY) cos = -1;
 
 		// the returned angle is in the range 0.0 through pi
 		double angle = Math.acos(cos);

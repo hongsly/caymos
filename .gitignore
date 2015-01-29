@@ -1,0 +1,4 @@
+*.exe
+src/META-INF
+src/test
+

@@ -20,12 +20,13 @@ package ccs.graph;
 import java.util.AbstractList;
 import java.util.ArrayList;
 
-public class ComponentCompleteCayleySampler implements NodeSampler<ArrayList<Double>> {
+public class ComponentCompleteCayleySampler implements
+		NodeSampler<ArrayList<Double>> {
 	int dimension;
 	int samplesPerNode;
-	TreeDecomp t;
+	TDLinkage t;
 
-	public ComponentCompleteCayleySampler(TreeDecomp t, int spn) {
+	public ComponentCompleteCayleySampler(TDLinkage t, int spn) {
 		assert (spn > 0);
 		this.t = t;
 		dimension = t.getNumOfConstructStep();
@@ -37,7 +38,8 @@ public class ComponentCompleteCayleySampler implements NodeSampler<ArrayList<Dou
 		return dimension;
 	}
 
-	public AbstractList<SamplePoint<ArrayList<Double>>> sample(Node n) {
+	public AbstractList<SamplePoint<ArrayList<Double>>> sample(
+			OrientedInterval n) {
 		ArrayList<SamplePoint<ArrayList<Double>>> list = new ArrayList<SamplePoint<ArrayList<Double>>>();
 
 		for (int i = 0; i < samplesPerNode; ++i) {
@@ -45,10 +47,10 @@ public class ComponentCompleteCayleySampler implements NodeSampler<ArrayList<Dou
 
 			double percentage = (double) i / samplesPerNode;
 			double cayley = n.sampleCayleyAt(percentage);
-			Graph g = t.tryRealize(cayley, n.getSolutionType());
+			Realization g = t.tryRealize(cayley, n.getSolutionType());
 			assert (g != null);
-			for (Edge e : t.getCanonicalBaseNonedges()) {
-				double le = g.distance(e);
+			for (Edge e : t.completeCayleyVector()) {
+				double le = g.length(e);
 				l.add(le);
 			}
 			list.add(new SamplePoint<ArrayList<Double>>(l));

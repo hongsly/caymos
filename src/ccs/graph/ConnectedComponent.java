@@ -21,30 +21,31 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import ccs.Debug;
-import ccs.TreeDecompModel;
+import ui.Debug;
+import ui.TDLinkageModel;
 
 public class ConnectedComponent extends ContinuousMotion {
 
-	public ConnectedComponent(TreeDecomp t) {
+	public ConnectedComponent(TDLinkage t) {
 		super(t);
 	}
 
 	@Override
-	public Node startNode() {
+	public OrientedInterval startNode() {
 		assert (!isEmpty());
 		return get(0);
 	}
 
 	@Override
-	public Node endNode() {
+	public OrientedInterval endNode() {
 		return startNode();
 	}
 
-	public static ConnectedComponent findComponentOf(TreeDecomp t, Graph g1) {
-		double startl = g1.distance(t.getBaseNonedge());
-		SolutionType startType = t.getForwardSolutionType(g1);
-		OrientedCCS startO = t.ccs.getOrientedCCS(startType);
+	public static ConnectedComponent findComponent(TDLinkage t, Realization g1) {
+		double startl = g1.length(t.getBaseNonedge());
+		RealizationType startType = t.getForwardSolutionType(g1);
+		OrientedCayleyConfigSpace startO = t.cayleyConfigSpace
+				.getOrientedCCS(startType);
 		Interval startI = startO.getContainingInterval(startl);
 
 		assert (startI != null);
@@ -54,34 +55,36 @@ public class ConnectedComponent extends ContinuousMotion {
 		// Using the entire interval as start node
 		double endl = startI.toArray()[0];
 		startl = startI.toArray()[1];
-		Node startNode = new Node(startl, endl, startI, startType);
+		OrientedInterval startNode = new OrientedInterval(startl, endl, startI,
+				startType);
 
 		component.add(startNode);
 
-		SolutionType type = startType;
+		RealizationType type = startType;
 
 		while (true) {
 			Debug.msg("from end point: " + endl);
 
 			// Flip the orientation of extreme construction step
-			Graph g = t.tryRealize(endl, type);
-			SolutionType extremeType = t.getForwardSolutionType(g);
+			Realization g = t.tryRealize(endl, type);
+			RealizationType extremeType = t.getForwardSolutionType(g);
 			if (!extremeType.isExtreme()) {
 				Debug.warnMsg(extremeType + "");
-				Debug.warnMsg(endl+"");
-				for (int i = 0; i < TreeDecompModel.getInstance()
+				Debug.warnMsg(endl + "");
+				for (int i = 0; i < TDLinkageModel.getInstance()
 						.getNumOfConstructStep(); ++i)
 					Debug.msg(i
 							+ ":"
-							+ TreeDecompModel.getInstance()
-									.getConstructionStep(i));
+							+ TDLinkageModel.getInstance().getConstructionStep(
+									i));
 
 			}
 			assert (extremeType.isExtreme());
 			int zeroIndex = extremeType.indexOfZero();
 			type.flipOrientation(zeroIndex);
 
-			OrientedCCS o = t.ccs.getOrientedCCS(type);
+			OrientedCayleyConfigSpace o = t.cayleyConfigSpace
+					.getOrientedCCS(type);
 			assert (o != null);
 			Interval curI = o.getContainingInterval(endl);
 			assert (curI != null);
@@ -95,13 +98,13 @@ public class ConnectedComponent extends ContinuousMotion {
 
 			// continue finding
 			startl = endl;
-			if (Math.abs(endl - curI.lower) < TreeDecomp.ACCURACY) {
+			if (Math.abs(endl - curI.lower) < TDLinkage.ACCURACY) {
 				endl = curI.upper;
 			} else {
-				assert (Math.abs(endl - curI.upper) < TreeDecomp.ACCURACY);
+				assert (Math.abs(endl - curI.upper) < TDLinkage.ACCURACY);
 				endl = curI.lower;
 			}
-			Node n = new Node(startl, endl, curI, type);
+			OrientedInterval n = new OrientedInterval(startl, endl, curI, type);
 			component.add(n);
 		}
 	}
@@ -109,38 +112,41 @@ public class ConnectedComponent extends ContinuousMotion {
 	/**
 	 * @return a list of all connected components of t
 	 */
-	public static ArrayList<ConnectedComponent> findAllComponents(TreeDecomp t) {
+	public static ArrayList<ConnectedComponent> findAllComponents(TDLinkage t) {
 		ArrayList<ConnectedComponent> list = new ArrayList<ConnectedComponent>();
 
 		// 1. list every intervals from every Occs.
-		LinkedList<TwoTuple<SolutionType, Interval>> intervalList = new LinkedList<TwoTuple<SolutionType, Interval>>();
-		for (OrientedCCS oc : t.ccs.getOrientedCCSs()) {
-			SolutionType type = oc.getSolutionType().clone();
+		LinkedList<TwoTuple<RealizationType, Interval>> intervalList = new LinkedList<TwoTuple<RealizationType, Interval>>();
+		for (OrientedCayleyConfigSpace oc : t.cayleyConfigSpace
+				.getOrientedCCSs()) {
+			RealizationType type = oc.getSolutionType().clone();
 			for (Interval i : oc.getIntervals()) {
-				intervalList.add(new TwoTuple<SolutionType, Interval>(type, i));
+				intervalList.add(new TwoTuple<RealizationType, Interval>(type,
+						i));
 			}
 		}
 
 		// 2. for each interval:
 		while (!intervalList.isEmpty()) {
 			// (1) gen component.
-			TwoTuple<SolutionType, Interval> orientedInt = intervalList
+			TwoTuple<RealizationType, Interval> orientedInt = intervalList
 					.getFirst();
-			SolutionType type = orientedInt.getFirst();
+			RealizationType type = orientedInt.getFirst();
 			Interval inv = orientedInt.getSecond();
 			double lf = (inv.lower + inv.upper) / 2;
-			Graph realization = t.solve(lf, type);
+			// Realization realization = t.solve(lf, type);
+			Realization realization = t.tryRealize(lf, type);
 			assert (realization != null);
 
 			Debug.msg("remove first oriented interval:" + orientedInt);
 
-			ConnectedComponent component = findComponentOf(t, realization);
+			ConnectedComponent component = findComponent(t, realization);
 			list.add(component);
 
 			// (2) remove the intervals passed by the component from the list of
 			// intervals
-			for (Node n : component) {
-				TwoTuple<SolutionType, Interval> nTuple = new TwoTuple<SolutionType, Interval>(
+			for (OrientedInterval n : component) {
+				TwoTuple<RealizationType, Interval> nTuple = new TwoTuple<RealizationType, Interval>(
 						n.getSolutionType().clone(), n.getInterval());
 				Debug.msg("interval list:" + intervalList);
 				Debug.msg("interval to remove:" + nTuple);
@@ -148,7 +154,7 @@ public class ConnectedComponent extends ContinuousMotion {
 				assert (b);
 			}
 		}
-
+		Debug.msg("total # of components:" + list.size(), 0);
 		return list;
 	}
 
@@ -163,10 +169,10 @@ public class ConnectedComponent extends ContinuousMotion {
 		if (size() != that.size())
 			return false;
 
-		Node thisFirst = this.get(0);
+		OrientedInterval thisFirst = this.get(0);
 		if (!that.contains(thisFirst))
 			return false;
-		ListIterator<Node> iterThis = this.listIterator(), iterThat = that
+		ListIterator<OrientedInterval> iterThis = this.listIterator(), iterThat = that
 				.listIterator(that.indexOf(thisFirst));
 		while (iterThis.hasNext()) {
 			if (!iterThat.hasNext())

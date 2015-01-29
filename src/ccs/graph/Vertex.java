@@ -19,11 +19,18 @@ package ccs.graph;
 
 import java.io.Serializable;
 
-public class Vertex implements Serializable{
+/**
+ * Represents a vertex of a {@link LinkageGraph}.
+ * @author Menghan
+ *
+ */
+public class Vertex implements Serializable {
 
 	// now vertex does not have position
 	// index should only be used as name?
 	// position retrieved by graph, using vertex or v.index as key?
+
+	private static final long serialVersionUID = 1L;
 
 	public int index;
 

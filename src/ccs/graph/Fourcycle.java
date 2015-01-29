@@ -21,7 +21,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import ccs.Debug;
+import ui.Debug;
 
 /** computes and stores the canonical edges of a TreeDecomp t
  */
@@ -30,12 +30,12 @@ public class Fourcycle {
 	/** 
 	 * @param t	the associated TreeDecomp graph 
 	 */
-	public Fourcycle(TreeDecomp t) {
+	public Fourcycle(TDLinkage t) {
 		this.t = t;
 	}
 
-	TreeDecomp t;
-	ArrayList<Edge> canonicalEdges;
+	TDLinkage t;
+	ArrayList<Edge> completeCayleyVector;
 	// ArrayList<Pair<Cluster>> l; // adjacent cluster pairs in four-cycles;
 	boolean isLow = false;
 
@@ -43,9 +43,9 @@ public class Fourcycle {
 	 * @return whether the associated TreeDecomp has low Cayley complexity
 	 */
 	public boolean init() {
-		ArrayList<Pair<Cluster>> l = new ArrayList<Pair<Cluster>>();
-		canonicalEdges = new ArrayList<Edge>();
-		canonicalEdges.add(t.getBaseNonedge());
+		ArrayList<Pair<Cluster>> validBasePairs = new ArrayList<Pair<Cluster>>();
+		completeCayleyVector = new ArrayList<Edge>();
+		completeCayleyVector.add(t.getBaseNonedge());
 
 		HashSet<Cluster> constructedClusters = new HashSet<Cluster>();
 
@@ -69,7 +69,7 @@ public class Fourcycle {
 					for (Cluster c2 : cv2) {
 						assert (!c1.equals(c2));
 						pair = new Pair<Cluster>(c1, c2);
-						if (l.contains(pair)) {
+						if (validBasePairs.contains(pair)) {
 							isLowStep = true;
 							break outer; // TODO: pick the pair constructed
 											// earliest
@@ -84,20 +84,20 @@ public class Fourcycle {
 				Vertex v = Cluster.sharedVertex(pair.getFirst(),
 						pair.getSecond());
 				assert (v != null);
-				canonicalEdges.add(new Edge(v, s.v()));
+				completeCayleyVector.add(new Edge(v, s.v()));
 
 				// (3)
 				for (Cluster c1 : cv1) {
 					for (Cluster c2 : cv2) {
 						assert (!c1.equals(c2));
 						if (Cluster.sharedVertex(c1, c2) != null) {
-							l.add(new Pair<Cluster>(s.c1(), c1));
-							l.add(new Pair<Cluster>(s.c2(), c2));
+							validBasePairs.add(new Pair<Cluster>(s.c1(), c1));
+							validBasePairs.add(new Pair<Cluster>(s.c2(), c2));
 						}
 					}
 				}
 			}
-			l.add(s.clusterPair);
+			validBasePairs.add(s.clusterPair);
 			constructedClusters.add(s.c1());
 			constructedClusters.add(s.c2());
 		}
@@ -106,9 +106,9 @@ public class Fourcycle {
 
 	}
 
-	public AbstractList<Edge> getCanonicalBaseNonedges() {
+	public AbstractList<Edge> getCompleteCayleyVector() {
 		assert (isLow);
-		return canonicalEdges;
+		return completeCayleyVector;
 	}
 
 }
