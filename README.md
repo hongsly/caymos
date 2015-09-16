@@ -1,0 +1,2 @@
+# caymos
+For a common class of 2D mechanisms called 1-dof tree decomposable linkages, CayMos? implements efficient algorithmic solutions for: (a) meaningfully representing and visualizing the connected components in the Euclidean realization space; (b) finding a path of continuous motion between two realizations in the same connected component, with or without restricting the realization type (sometimes called orientation type); (c) finding two ``closest'' realizations in different connected components. 
